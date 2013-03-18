@@ -18,7 +18,7 @@ var Monge = IgeEventingClass.extend({
 
 	/**
 	 * Connect to the database.
-	 * @param {Object} options The options to pass to the database method when executing. The connection options object.
+	 * @param {Object} options The connection options object.
 	 * @param {Function} cb The callback method.
 	 */
 	connect: function (options, cb) {
