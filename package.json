@@ -1,18 +1,26 @@
 {
-	"author": "Rob Evans",
+	"author": "Rob Evans (Irrelon Software Limited)",
 	"name": "monge",
 	"description": "An easy to use library for accessing and working with MongoDB.",
-	"version": "1.0.1",
+	"keywords": ["mongodb", "mongo", "driver", "db", "easy"],
+	"version": "1.0.2",
 	"repository": {
-		"git": "https://github.com/coolbloke1324/monge"
+		"type": "git",
+		"url": "https://github.com/coolbloke1324/monge"
+	},
+	"bugs": {
+		"url": "https://github.com/coolbloke1324/monge/issues"
 	},
 	"main": "./index",
 	"dependencies": {
+		"mongodb": "1.1.1"
+	},
+	"devDependencies": {
 		"mongodb": "1.1.1",
 		"nodeunit": "*"
 	},
-	"devDependencies": {},
 	"optionalDependencies": {},
+	"homepage": "https://github.com/coolbloke1324/monge",
 	"engines": {
 		"node": "*"
 	}
