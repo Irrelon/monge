@@ -316,5 +316,10 @@ monge.connect({
 });
 ```
 
+# Phone Home
+This software is developed by Rob Evans and is licensed from Irrelon Software Limited, the creators of the Isogenic
+Game Engine (http://www.isogenicengine.com). This open-source software is provided as is without any warranty or
+guarantee as is provided free of charge and free of restriction.
+
 # License
 This software is licensed under the MIT license.
