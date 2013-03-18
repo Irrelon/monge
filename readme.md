@@ -6,6 +6,17 @@ An easy to use library for accessing and working with MongoDB.
 npm install monge
 ```
 
+## Unit Tests
+There is a full suite of unit tests included in the ./tests folder. They are designed to run via nodeunit and you can
+execute them via:
+```
+node ./tests/index.js
+```
+
+Please note that the tests require a MongoDB server running at "localhost" that has no access restrictions. A collection
+called "test" will be created and used during the unit test execution. A database called "mongeTest" is expected to
+exist on the server before any tests are run. Please create it if it does not already exist.
+
 ## Connect to MongoDB Server
 ```
 var monge = require('monge');
