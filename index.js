@@ -19,11 +19,17 @@ var Monge = IgeEventingClass.extend({
 	connect: function (options, cb) {
 		this._options = options;
 		
-		if (!options.port) {
-			options.port = 27017;
+		if (!this._options.port) {
+			this._options.port = 27017;
 		}
 		
-		this.log('Connecting to mongo database "'  + options.db + '" @' + options.host + ':' + options.port);
+		if (!this._options.nativeParser) {
+			this._options.nativeParser = false;
+		}
+		
+		if (!this._options.strict) {
+			this._options.strict = false;
+		}
 		
 		var mongoServer = new this._mongo.Server(
 			this._options.host,
@@ -34,19 +40,19 @@ var Monge = IgeEventingClass.extend({
 		this.client = new this._mongo.Db(
 			this._options.db,
 			mongoServer,
-			{native_parser: this._nativeParser}
+			{native_parser: this._options.nativeParser}
 		);
 	
-		this.client.strict = this._strict;
+		this.client.strict = this._options.strict;
 	
 		// Open the database connection
 		this.client.open(function(err, db) {
 			// If we have a username then authenticate!
-			if (self._username) {
-				self.client.authenticate(self._username, self._password, cb);
+			if (self._options.user) {
+				self.client.authenticate(self._options.user, self._options.pass, cb);
 			} else {
 				if (typeof(cb) === 'function') {
-					cb.apply(self, [err]);
+					cb(err);
 				}
 			}
 		});
@@ -57,10 +63,7 @@ var Monge = IgeEventingClass.extend({
 	 * @param cb
 	 */
 	disconnect: function (cb) {
-		this.log("Closing DB connection...");
-		this.client.close(function (err, data) {
-			cb(err, data);
-		});
+		this.client.close(cb);
 	},
 	
 	/**
@@ -81,6 +84,7 @@ var Monge = IgeEventingClass.extend({
 
 					// Callback the result
 					if (typeof(cb) === 'function') {
+						docs !== undefined ? String(docs[0]._id) : null;
 						cb(err, docs);
 					}
 				});
@@ -89,6 +93,72 @@ var Monge = IgeEventingClass.extend({
 				if (typeof(cb) === 'function') {
 					cb(err, tempCollection);
 				}
+			}
+		});
+	},
+	
+	/**
+	 * Returns all records matching the search object and returns them as an array.
+	 */
+	query: function (collection, obj, options, cb) {
+		var self = this;
+		if (!options) { options = {}; }
+		
+		if (options.returnFields) {
+			options.fields = options.returnFields;
+			delete options.returnFields;
+		}
+
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				// Got the collection (or err)
+				var tempCursor = tempCollection.find(obj, options);
+				
+				if (tempCursor) {
+					// Got the result cursor (or err)
+					if (!options.orderBy) {
+						tempCursor.toArray(function (err, results) {
+							var i;
+	
+							// Callback the results
+							if (typeof(cb) === 'function') {
+								cb(err, results);
+							}
+						});
+					} else {
+						tempCursor
+							.sort(options.orderBy)
+							.toArray(function (err, results) {
+								var i;
+		
+								// Callback the results
+								if (typeof(cb) === 'function') {
+									cb(err, results);
+								}
+							});
+					}
+				}
+			} else {
+				if (typeof(cb) === 'function') {
+					cb(err, results);
+				}
+			}
+		});
+	},
+	
+	/**
+	 * Returns a single item matching the search object.
+	 */
+	queryOne: function (collection, obj, options, cb) {
+		if (!options) { options = {}; }
+		
+		// Add a limit to the options
+		options.limit = 1;
+		this.query(collection, obj, options, function (err, item) {
+			if (!err) {
+				cb(err, item[0]);
+			} else {
+				cb(err);
 			}
 		});
 	}
