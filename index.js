@@ -1,103 +1,97 @@
-var mongodb = require('mongodb');
+require('./lib/IgePrimitives');
 
-var mongoease = function (options) {
-	// Setup the mongo module
-	this._mongo = {};
-	this._mongo.Db = require('../../../' + modulePath + 'mongodb').Db;
-	this._mongo.Connection = require('../../../' + modulePath + 'mongodb').Connection;
-	this._mongo.Server = require('../../../' + modulePath + 'mongodb').Server;
-	this._mongo.BSON = this._mongo.Db.bson_serializer;
+var IgeClass = require('./lib/IgeClass'),
+	IgeEventingClass = require('./lib/IgeEventingClass');
+
+var Monge = IgeEventingClass.extend({
+	init: function () {
+		this._mongoNative = require('mongodb');
+		
+		this._mongo = {};
+		this._mongo.Db = this._mongoNative.Db;
+		this._mongo.Connection = this._mongoNative.Connection;
+		this._mongo.Server = this._mongoNative.Server;
+		this._mongo.BSON = this._mongo.Db.bson_serializer;
+		
+		this._options = {};
+	},
 	
-	this._host = options.host;
-	this._database = options.database;
-	this._port = options.port;
-	this._username = options.user;
-	this._password = options.pass;
-};
-
-/**
- * Connect to the database with the current settings.
- * @param callback
- */
-mongoease.prototype.connect = function (callback) {
-	console.log('Connecting to mongo database "'  + this._database + '" @' + this._host + ':' + this._port);
-	
-	var mongoServer = new this._mongo.Server(
-		this._host,
-		parseInt(this._port),
-		{}
-	), self = this;
-
-	this.client = new this._mongo.Db(
-		this._database,
-		mongoServer,
-		{native_parser: this._nativeParser}
-	);
-
-	this.client.strict = this._strict;
-
-	// Open the database connection
-	this.client.open(function(err, db) {
-		// If we have a username then authenticate!
-		if (self._username) {
-			self.client.authenticate(self._username, self._password, function (err) {
-				if (err) {
-					self.log('Error when authenticating with the database!');
-					//console.log(err);
-
-					if (typeof(callback) === 'function') {
-						callback.apply(self, [err]);
-					}
-				} else {
-					self.log('Connected to mongo DB ok, processing callbacks...');
-					self._connected.apply(self, [err, db, callback]);
-				}
-			});
-		} else {
-			if (err) {
-				self.log('Error when connecting to the database!');
-				//console.log(err);
-
-				if (typeof(callback) === 'function') {
-					callback.apply(self, [err]);
-				}
-			} else {
-				self.log('Connected to mongo DB ok, processing callbacks...');
-				self._connected.apply(self, [err, db, callback]);
-			}
+	connect: function (options, cb) {
+		this._options = options;
+		
+		if (!options.port) {
+			options.port = 27017;
 		}
-	});
-};
-
+		
+		this.log('Connecting to mongo database "'  + options.db + '" @' + options.host + ':' + options.port);
+		
+		var mongoServer = new this._mongo.Server(
+			this._options.host,
+			parseInt(this._options.port),
+			{}
+		), self = this;
+	
+		this.client = new this._mongo.Db(
+			this._options.db,
+			mongoServer,
+			{native_parser: this._nativeParser}
+		);
+	
+		this.client.strict = this._strict;
+	
+		// Open the database connection
+		this.client.open(function(err, db) {
+			// If we have a username then authenticate!
+			if (self._username) {
+				self.client.authenticate(self._username, self._password, cb);
+			} else {
+				if (typeof(cb) === 'function') {
+					cb.apply(self, [err]);
+				}
+			}
+		});
+	},
+	
 	/**
 	 * Disconnect from the current mongo connection.
-	 * @param callback
+	 * @param cb
 	 */
-	disconnect: function (callback) {
+	disconnect: function (cb) {
 		this.log("Closing DB connection...");
-		this.client.close();
-
-		callback();
+		this.client.close(function (err, data) {
+			cb(err, data);
+		});
 	},
-
+	
 	/**
-	 * Called by the connect() method once a connection has been established
-	 * or a connection error occurs.
-	 * @param err
-	 * @param db
-	 * @param callback
-	 * @private
+	 * Inserts a new item into the database.
+	 * @param {String} collection The collection name to operate on.
+	 * @param {Object} obj The JSON data to insert e.g. {myData: true}
+	 * @param {Function} cb The method to call once the DB operation
+	 * has been completed.
 	 */
-	_connected: function (err, db, callback) {
-		if (!err) {
-			this.log('MongoDB connected successfully.');
-			this.emit('connected');
-		} else {
-			this.log('MongoDB connection error', 'error', err);
-			this.emit('connectionError');
-		}
+	insert: function (collection, obj, cb) {
+		var self = this;
 
-		if (typeof(callback) === 'function') {
-			callback.apply(this, [err, db]);
-		}
-	},
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				// Got the collection
+				tempCollection.insert(obj, function (err, docs) {
+					var i;
+
+					// Callback the result
+					if (typeof(cb) === 'function') {
+						cb(err, docs);
+					}
+				});
+			} else {
+				// Callback the result
+				if (typeof(cb) === 'function') {
+					cb(err, tempCollection);
+				}
+			}
+		});
+	}
+});
+
+module.exports = new Monge();
