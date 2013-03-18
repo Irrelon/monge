@@ -8,8 +8,7 @@
 	},
 	"main": "./index",
 	"dependencies": {
-		"mongodb": "1.1.1",
-		"nodeunit": "*"
+		"mongodb": "1.1.1"
 	},
 	"devDependencies": {},
 	"optionalDependencies": {},
