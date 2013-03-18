@@ -321,6 +321,53 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
+	
+	/**
+	 * Removes an item's property / key. 
+	 * @param {String} collection The collection to work with.
+	 * @param {Object} searchObj The key/values to search for when finding items to unset keys in.
+	 * @param {Object} unSetObj The keys to unset with a value of 1. E.g. to unset a key "name" you
+	 * would pass {"name": 1}.
+	 * @param {Object} options The options to pass to the database method when executing.
+	 * @param {Function} cb The callback method.
+	 */
+	unset: function (collection, searchObj, unSetObj, options, cb) {
+		if (!options) { options = {}; }
+
+		// Set some options defaults
+		if (options.safe === undefined) { options.safe = true; }
+		if (options.multiple === undefined) {
+			options.multi = true;
+		} else {
+			options.multi = options.multiple;
+			delete options.multiple;
+		}
+		if (options.upsert === undefined) { options.upsert = false; }
+		
+		if (!searchObj) { searchObj = {}; }
+		if (!unSetObj) { unSetObj = {}; }
+		this._convertIds(searchObj);
+		this._convertIds(unSetObj);
+
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				var finalUpdateJson;
+
+				// Ensure we only update, not overwrite!
+				finalUpdateJson = {
+					'$unset': unSetObj
+				};
+
+				// Got the collection (or err)
+				tempCollection.update(searchObj, finalUpdateJson, options, cb);
+			} else {
+				// Callback the result
+				if (typeof(cb) === 'function') {
+					cb(err, tempCollection);
+				}
+			}
+		});
+	},
 
 	/**
 	 * Pushes an item to an array field.
@@ -405,53 +452,6 @@ var Monge = IgeEventingClass.extend({
 				// Ensure we only update, not overwrite!
 				finalUpdateJson = {
 					'$pull': updateObj
-				};
-
-				// Got the collection (or err)
-				tempCollection.update(searchObj, finalUpdateJson, options, cb);
-			} else {
-				// Callback the result
-				if (typeof(cb) === 'function') {
-					cb(err, tempCollection);
-				}
-			}
-		});
-	},
-
-	/**
-	 * Removes an item's property / key. 
-	 * @param {String} collection The collection to work with.
-	 * @param {Object} searchObj The key/values to search for when finding items to unset keys in.
-	 * @param {Object} unSetObj The keys to unset with a value of 1. E.g. to unset a key "name" you
-	 * would pass {"name": 1}.
-	 * @param {Object} options The options to pass to the database method when executing.
-	 * @param {Function} cb The callback method.
-	 */
-	unset: function (collection, searchObj, unSetObj, options, cb) {
-		if (!options) { options = {}; }
-
-		// Set some options defaults
-		if (options.safe === undefined) { options.safe = true; }
-		if (options.multiple === undefined) {
-			options.multi = true;
-		} else {
-			options.multi = options.multiple;
-			delete options.multiple;
-		}
-		if (options.upsert === undefined) { options.upsert = false; }
-		
-		if (!searchObj) { searchObj = {}; }
-		if (!unSetObj) { unSetObj = {}; }
-		this._convertIds(searchObj);
-		this._convertIds(unSetObj);
-
-		this.client.collection(collection, function (err, tempCollection) {
-			if (!err) {
-				var finalUpdateJson;
-
-				// Ensure we only update, not overwrite!
-				finalUpdateJson = {
-					'$unset': unSetObj
 				};
 
 				// Got the collection (or err)
