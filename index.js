@@ -74,7 +74,7 @@ var Monge = IgeEventingClass.extend({
 	/**
 	 * Inserts a new item into the database.
 	 * @param {String} collection The collection to work with.
-	 * @param {Object} searchObj The object to insert.
+	 * @param {Object} obj The object to insert.
 	 * @param {Object} options The options to pass to the database method when executing.
 	 * @param {Function} cb The callback method.
 	 */
