@@ -60,7 +60,6 @@ monge.connect({
 
 ## Inserting
 ```
-
 /**
  * Inserts a new item into the database.
  * @param {String} collection The collection to work with.
