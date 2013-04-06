@@ -1,4 +1,4 @@
-var monge = require('../index.js');
+var monge = new (require('../index.js').Monge)();
 
 exports.connect = function (test) {
 	///////////////////////////////////////////////////
