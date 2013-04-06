@@ -3,6 +3,56 @@ require('./lib/IgePrimitives');
 var IgeClass = require('./lib/IgeClass'),
 	IgeEventingClass = require('./lib/IgeEventingClass');
 
+var MongeManager = IgeEventingClass.extend({
+	init: function () {
+		this._connectionCount = 0;
+		this._connectedCount = 0;
+	},
+	
+	connect: function (connections, callback) {
+		var self = this;
+		
+		if (connections instanceof Array) {
+			// Multiple connection objects
+			var i;
+			
+			for (i in connections) {
+				if (connections.hasOwnProperty(i)) {
+					// Create new monge instance
+					this[connections[i].name] = new Monge();
+					
+					this._connectionCount++;
+					
+					// Register listener
+					this[connections[i].name].on('connection', function (err, db) {
+						if (!err) {
+							self._connectedCount++;
+							self.emit('connection', [false, connections[i]]);
+							
+							if (self._connectedCount === self._connectionCount) {
+								// All connections established, callback now
+								callback(false);
+							}
+						}
+					});
+				}
+			}
+			
+			for (i in connections) {
+				if (connections.hasOwnProperty(i)) {
+					this[connections[i].name].connect(connections[i], function (err, db) {
+						
+					});
+				}
+			}
+		} else {
+			// Single connection object
+			this[connections.name] = new Monge();
+			this[connections.name].connect(connections, callback);
+		}
+	}
+});
+
 var Monge = IgeEventingClass.extend({
 	init: function () {
 		this._mongoNative = require('mongodb');
@@ -22,6 +72,8 @@ var Monge = IgeEventingClass.extend({
 	 * @param {Function} cb The callback method.
 	 */
 	connect: function (options, cb) {
+		var self = this;
+		
 		this._options = options;
 		
 		if (!this._options.port) {
@@ -40,7 +92,7 @@ var Monge = IgeEventingClass.extend({
 			this._options.host,
 			parseInt(this._options.port),
 			{}
-		), self = this;
+		);
 	
 		this.client = new this._mongo.Db(
 			this._options.db,
@@ -54,9 +106,13 @@ var Monge = IgeEventingClass.extend({
 		this.client.open(function(err, db) {
 			// If we have a username then authenticate!
 			if (self._options.user) {
-				self.client.authenticate(self._options.user, self._options.pass, cb);
+				self.client.authenticate(self._options.user, self._options.pass, function () {
+					self.emit('connection', arguments);
+					cb.apply(this, arguments);
+				});
 			} else {
 				if (typeof(cb) === 'function') {
+					self.emit('connection', [err]);
 					cb(err);
 				}
 			}
@@ -530,4 +586,5 @@ var Monge = IgeEventingClass.extend({
 	}
 });
 
-module.exports = new Monge();
+module.exports.Monge = Monge;
+module.exports.MongeManager = MongeManager;
