@@ -17,9 +17,61 @@ Please note that the tests require a MongoDB server running at "localhost" that 
 called "test" will be created and used during the unit test execution. A database called "mongeTest" is expected to
 exist on the server before any tests are run. Please create it if it does not already exist if you wish to run the tests.
 
-## Connect to MongoDB Server
+## Using the New Connection Manager
+From version 1.1.0 there is a new connection manager that allows you to connect to multiple mongo instances and access
+them from code very easily.
+
+### Connecting to Multiple DB Instances With the Manager
+```
+// Require the manager and create a new instance of it
+var monge = new (require('monge').MongeManager)();
+
+// Connect to multipe databases and callback when all connections
+// have been succesfully established - pass an array of connection objects!
+monge.connect([{
+	name: 'myMongeDb1', // This will be used as the accessor for the DB
+	host: 'localhost',
+	db: 'mongeTest'
+}, {
+	name: 'myMongeDb2', // This will be used as the accessor for the DB
+	host: 'someServerIpOrDomain',
+	db: 'someDbName'
+}], function (err, db) {
+	if (!err) {
+		// Connected to ALL dbs successfully
+		
+		// Now let's run a query against the first connection
+		monge.myMongeDb1.query(...);
+	}
+});
+```
+
+### Querying Via the Manager
+The manager exposes each database via an accessor that is named based on the "name" value you gave in the connection
+object. In the example above the names were "myMongeDb1" and "myMongeDb2". These are exposed under the manager
+instance like so:
+
+```
+monge.myMongeDb1.query(...);
+monge.myMongeDb2.insert(...);
+```
+
+If you prefer not to use the manager you can continue to use existing Monge code before the manager existed with a small
+change to your require() call. To get an individual monge instance you used to do:
+
 ```
 var monge = require('monge');
+```
+
+BUT you should now do:
+
+```
+var monge = new (require('monge').Monge)();
+```
+
+## Connect to MongoDB Server
+```
+var monge = new (require('monge').Monge)();
 
 /**
  * Connect to the database.
@@ -38,7 +90,7 @@ monge.connect({
 
 ### More Connection Options
 ```
-var monge = require('monge');
+var monge = new (require('monge').Monge)();
 
 /**
  * Connect to the database.
