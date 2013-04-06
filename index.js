@@ -14,34 +14,31 @@ var MongeManager = IgeEventingClass.extend({
 		
 		if (connections instanceof Array) {
 			// Multiple connection objects
+			console.log('Connecting to mutliple mongos...');
 			var i;
 			
 			for (i in connections) {
 				if (connections.hasOwnProperty(i)) {
 					// Create new monge instance
 					this[connections[i].name] = new Monge();
-					
 					this._connectionCount++;
-					
-					// Register listener
-					this[connections[i].name].on('connection', function (err, db) {
-						if (!err) {
-							self._connectedCount++;
-							self.emit('connection', [false, connections[i]]);
-							
-							if (self._connectedCount === self._connectionCount) {
-								// All connections established, callback now
-								callback(false);
-							}
-						}
-					});
 				}
 			}
 			
 			for (i in connections) {
 				if (connections.hasOwnProperty(i)) {
 					this[connections[i].name].connect(connections[i], function (err, db) {
-						
+						if (!err) {
+							self._connectedCount++;
+							self.emit('connection', [false, connections[i]]);
+							
+							console.log('Connected');
+							
+							if (self._connectedCount === self._connectionCount) {
+								// All connections established, callback now
+								callback(false);
+							}
+						}
 					});
 				}
 			}
