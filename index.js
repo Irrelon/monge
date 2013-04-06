@@ -206,12 +206,19 @@ var Monge = IgeEventingClass.extend({
 	 * @param {Function} cb The callback method.
 	 */
 	query: function (collection, obj, options, cb) {
-		var self = this;
+		var self = this,
+			modifierOptions = {};
+		
 		if (!options) { options = {}; }
 		
 		if (options.returnFields) {
 			options.fields = options.returnFields;
 			delete options.returnFields;
+		}
+		
+		if (options.orderBy) {
+			modifierOptions.orderBy = options.orderBy;
+			delete options.orderBy;
 		}
 		
 		if (!obj) { obj = {}; }
@@ -224,10 +231,8 @@ var Monge = IgeEventingClass.extend({
 				
 				if (tempCursor) {
 					// Got the result cursor (or err)
-					if (!options.orderBy) {
+					if (!modifierOptions.orderBy) {
 						tempCursor.toArray(function (err, results) {
-							var i;
-	
 							// Callback the results
 							if (typeof(cb) === 'function') {
 								cb(err, results);
@@ -235,10 +240,8 @@ var Monge = IgeEventingClass.extend({
 						});
 					} else {
 						tempCursor
-							.sort(options.orderBy)
+							.sort(modifierOptions.orderBy)
 							.toArray(function (err, results) {
-								var i;
-		
 								// Callback the results
 								if (typeof(cb) === 'function') {
 									cb(err, results);
