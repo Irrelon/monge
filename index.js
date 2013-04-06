@@ -14,7 +14,6 @@ var MongeManager = IgeEventingClass.extend({
 		
 		if (connections instanceof Array) {
 			// Multiple connection objects
-			console.log('Connecting to mutliple mongos...');
 			var i;
 			
 			for (i in connections) {
@@ -31,8 +30,6 @@ var MongeManager = IgeEventingClass.extend({
 						if (!err) {
 							self._connectedCount++;
 							self.emit('connection', [false, connections[i]]);
-							
-							console.log('Connected');
 							
 							if (self._connectedCount === self._connectionCount) {
 								// All connections established, callback now
