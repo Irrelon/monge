@@ -74,7 +74,7 @@ exports.count = function (test) {
 		///////////////////////////////////////////////////
 		monge.count('test', {'test': 1}, function (err, count) {
 			test.ifError(err);
-			test.equal(count === 1, true, 'Expected count === 1 and got ' + count);
+			test.equal(count >= 1, true, 'Expected count >= 1 and got ' + count);
 			test.done();
 		});
 	});
