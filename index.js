@@ -360,6 +360,7 @@ var Monge = IgeEventingClass.extend({
 	 */
 	distinct: function (collection, key, obj, options, cb) {
 		if (!obj) { obj = {}; }
+		if (!options) { options = {}; }
 		this._convertIds(obj);
 		
 		this.client.command({"distinct": collection, "key": key, "query": obj || {}}, options, function (err, dataArr) {
