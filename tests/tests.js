@@ -27,7 +27,7 @@ exports.update = function (test) {
 		///////////////////////////////////////////////////
 		// UPDATE AN ITEM
 		///////////////////////////////////////////////////
-		monge.update('test', {'test': 0}, {'test': 1}, function (err) {
+		monge.update('test', {'test': 0}, {'test': 1}, null, function (err) {
 			test.ifError(err);
 			test.done();
 		});

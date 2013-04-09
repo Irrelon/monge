@@ -158,7 +158,7 @@ Example:
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.update('test', {'test': 0}, {'test': 1}, function (err) {
+monge.update('test', {'test': 0}, {'test': 1}, null, function (err) {
 	if (!err) {
 		// Update successful
 	}
