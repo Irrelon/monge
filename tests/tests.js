@@ -15,7 +15,7 @@ exports.insert = function (test) {
 		///////////////////////////////////////////////////
 		// INSERT AN ITEM
 		///////////////////////////////////////////////////
-		monge.insert('test', {'test': 0}, {}, function (err, id) {
+		monge.insert('test', {'test': 0}, null, function (err, id) {
 			test.ifError(err);
 			test.done();
 		});
@@ -39,7 +39,7 @@ exports.query = function (test) {
 		///////////////////////////////////////////////////
 		// QUERY THE DATABASE FOR MULTIPLE ITEMS
 		///////////////////////////////////////////////////
-		monge.query('test', {'test': 1}, {}, function (err, items) {
+		monge.query('test', {'test': 1}, null, function (err, items) {
 			test.ifError(err);
 			test.equal(items.length > 0, true, 'Returned data is empty!');
 			if (items.length > 0) {
@@ -55,7 +55,7 @@ exports.queryOne = function (test) {
 		///////////////////////////////////////////////////
 		// QUERY THE DATABASE FOR A SINGLE ITEM
 		///////////////////////////////////////////////////
-		monge.queryOne('test', {'test': 1}, {}, function (err, item) {
+		monge.queryOne('test', {'test': 1}, null, function (err, item) {
 			test.ifError(err);
 			test.equal(item !== undefined, true, 'Returned data is empty!');
 			
@@ -85,7 +85,7 @@ exports.distinct = function (test) {
 		///////////////////////////////////////////////////
 		// GET DISTINCT VALUES FOR A KEY
 		///////////////////////////////////////////////////
-		monge.distinct('test', 'test', {}, {}, function (err, values) {
+		monge.distinct('test', 'test', {}, null, function (err, values) {
 			test.ifError(err);
 			test.equal(typeof(values) == 'object' && values.length > 0, true, 'Expected array');
 			test.done();
@@ -100,18 +100,18 @@ exports.unset = function (test) {
 			test.ifError(err);
 			
 			// Get the item and check it has a "name" field
-			monge.queryOne('test', {'_id': id}, {}, function (err, item) {
+			monge.queryOne('test', {'_id': id}, null, function (err, item) {
 				test.ifError(err);
 				test.equals(item['name'] !== undefined, true, 'Name field was not set!');
 				
 				///////////////////////////////////////////////////
 				// UNSET A KEY FROM AN ITEM (DELETE JUST KEY/VALUE)
 				///////////////////////////////////////////////////
-				monge.unset('test', {'_id': id}, {'name': 1}, function (err) {
+				monge.unset('test', {'_id': id}, {'name': 1}, null, function (err) {
 					test.ifError(err);
 					
 					// Get the item and check it has no "name" field
-					monge.queryOne('test', {'_id': id}, {}, function (err, item) {
+					monge.queryOne('test', {'_id': id}, null, function (err, item) {
 						test.equals(item['name'] === undefined, true, 'Name field was not unset!');
 						test.done();
 					});
@@ -124,7 +124,7 @@ exports.unset = function (test) {
 exports.push = function (test) {
 	monge.connect({host: 'localhost', db: 'mongeTest'}, function (err, db) {
 		// Add a new item
-		monge.insert('test', {'values': []}, {},  function (err, id) {
+		monge.insert('test', {'values': []}, null,  function (err, id) {
 			test.ifError(err);
 			
 			///////////////////////////////////////////////////
@@ -134,7 +134,7 @@ exports.push = function (test) {
 				test.ifError(err);
 				
 				// Get the item and check it has one item in the array
-				monge.queryOne('test', {'_id': id}, {}, function (err, item) {
+				monge.queryOne('test', {'_id': id}, null, function (err, item) {
 					test.ifError(err);
 					test.equals(item['values'].length === 1 && item['values'][0] === 'hello', true, 'Was expecting an item in the array');
 					test.done();
@@ -147,7 +147,7 @@ exports.push = function (test) {
 exports.pull = function (test) {
 	monge.connect({host: 'localhost', db: 'mongeTest'}, function (err, db) {
 		// Add a new item
-		monge.insert('test', {'values': ['hello']}, {},  function (err, id) {
+		monge.insert('test', {'values': ['hello']}, null,  function (err, id) {
 			test.ifError(err);
 			
 			///////////////////////////////////////////////////
@@ -157,7 +157,7 @@ exports.pull = function (test) {
 				test.ifError(err);
 				
 				// Get the item and check it has no item in the array
-				monge.queryOne('test', {'_id': id}, {}, function (err, item) {
+				monge.queryOne('test', {'_id': id}, null, function (err, item) {
 					test.ifError(err);
 					test.equals(item['values'].length === 0, true, 'Was expecting no items in the array');
 					test.done();
@@ -172,7 +172,7 @@ exports.remove = function (test) {
 		///////////////////////////////////////////////////
 		// REMOVE ALL MATCHING ITEMS FROM THE COLLECTION
 		///////////////////////////////////////////////////
-		monge.remove('test', {}, {}, function (err) {
+		monge.remove('test', {}, null, function (err) {
 			test.ifError(err);
 			test.done();
 		});

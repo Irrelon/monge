@@ -119,7 +119,7 @@ monge.connect({
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.insert('test', {'test': 0}, {}, function (err, id) {
+monge.insert('test', {'test': 0}, null, function (err, id) {
 	if (!err) {
 		// Insert successful, the inserted item ID is in "id" (string)
 	}
@@ -174,7 +174,7 @@ monge.update('test', {'test': 0}, {'test': 1}, null, function (err) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.query('test', {'test': 1}, {}, function (err, items) {
+monge.query('test', {'test': 1}, null, function (err, items) {
 	if (!err) {
 		// Do something with "items" (array)
 	}
@@ -190,7 +190,7 @@ monge.query('test', {'test': 1}, {}, function (err, items) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.queryOne('test', {'test': 1}, {}, function (err, item) {
+monge.queryOne('test', {'test': 1}, null, function (err, item) {
 	if (!err) {
 		// Do something with "item" (object)
 	}
@@ -222,7 +222,7 @@ monge.count('test', {'test': 1}, function (err, count) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.distinct('test', 'test', {}, {}, function (err, values) {
+monge.distinct('test', 'test', {}, null, function (err, values) {
 	if (!err) {
 		// Do something with "values" (array)
 	}
@@ -240,7 +240,7 @@ monge.distinct('test', 'test', {}, {}, function (err, values) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.unset('test', {'_id': id}, {'name': 1}, function (err) {
+monge.unset('test', {'_id': id}, {'name': 1}, null, function (err) {
 	if (!err) {
 		// Unset successful
 	}
@@ -258,7 +258,7 @@ monge.unset('test', {'_id': id}, {'name': 1}, function (err) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.push('test', {'_id': id}, {'values': 'hello'}, function (err) {
+monge.push('test', {'_id': id}, {'values': 'hello'}, null, function (err) {
 	if (!err) {
 		// Push successful
 	}
@@ -276,7 +276,7 @@ monge.push('test', {'_id': id}, {'values': 'hello'}, function (err) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.pull('test', {'_id': id}, {'values': 'hello'}, function (err) {
+monge.pull('test', {'_id': id}, {'values': 'hello'}, null, function (err) {
 	if (!err) {
 		// Pull successful
 	}
@@ -292,7 +292,7 @@ monge.pull('test', {'_id': id}, {'values': 'hello'}, function (err) {
  * @param {Object} options The options to pass to the database method when executing.
  * @param {Function} cb The callback method.
  */
-monge.remove('test', {}, {}, function (err) {
+monge.remove('test', {}, null, function (err) {
 	if (!err) {
 		// Remove successful
 	}
