@@ -7,6 +7,8 @@ var MongeManager = IgeEventingClass.extend({
 	init: function () {
 		this._connectionCount = 0;
 		this._connectedCount = 0;
+		
+		this._dbNames = [];
 	},
 	
 	connect: function (connections, callback) {
@@ -19,6 +21,7 @@ var MongeManager = IgeEventingClass.extend({
 			for (i in connections) {
 				if (connections.hasOwnProperty(i)) {
 					// Create new monge instance
+					this._dbNames.push(connections[i].name);
 					this[connections[i].name] = new Monge();
 					this._connectionCount++;
 				}
@@ -41,6 +44,7 @@ var MongeManager = IgeEventingClass.extend({
 			}
 		} else {
 			// Single connection object
+			this._dbNames.push(connections.name);
 			this[connections.name] = new Monge();
 			this[connections.name].connect(connections, callback);
 		}
@@ -553,6 +557,15 @@ var Monge = IgeEventingClass.extend({
 				}
 			}
 		});
+	},
+
+	/**
+	 * Converts a string into a new database ObjectID.
+	 * @param string The string id to convert to an ObjectID.
+	 * @returns {Object} The new mongo ObjectID.
+	 */
+	toId: function (string) {
+		return new this.client.bson_serializer.ObjectID(string);
 	},
 
 	/**
