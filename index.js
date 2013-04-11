@@ -561,11 +561,15 @@ var Monge = IgeEventingClass.extend({
 
 	/**
 	 * Converts a string into a new database ObjectID.
-	 * @param string The string id to convert to an ObjectID.
+	 * @param id The string id to convert to an ObjectID.
 	 * @returns {Object} The new mongo ObjectID.
 	 */
-	toId: function (string) {
-		return new this.client.bson_serializer.ObjectID(string);
+	toId: function (id) {
+		if (typeof(id) === 'string') {
+			return new this.client.bson_serializer.ObjectID(string);
+		} else {
+			return id;
+		}
 	},
 
 	/**
