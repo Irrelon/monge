@@ -566,7 +566,7 @@ var Monge = IgeEventingClass.extend({
 	 */
 	toId: function (id) {
 		if (typeof(id) === 'string') {
-			return new this.client.bson_serializer.ObjectID(string);
+			return new this.client.bson_serializer.ObjectID(id);
 		} else {
 			return id;
 		}
