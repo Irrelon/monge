@@ -558,9 +558,10 @@ var Monge = IgeEventingClass.extend({
 	/**
 	 * A private method for converting _id key/values to string and mongo ID objects.
 	 * @param obj
+	 * @param {String=} toType Sets the type to convert to, either 'string' or 'id'. 
 	 * @private
 	 */
-	_convertIds: function (obj) {
+	_convertIds: function (obj, toType) {
 		if (obj) {
 			if (obj instanceof Array) {
 				// Loop the objects in the array recursively
@@ -570,10 +571,14 @@ var Monge = IgeEventingClass.extend({
 			} else {
 				if (obj._id) {
 					if (typeof(obj._id) === 'string') {
-						// Convert to a mongo id
-						obj._id = new this.client.bson_serializer.ObjectID(obj._id);
+						if (toType !== 'string') {
+							// Convert to a mongo id
+							obj._id = new this.client.bson_serializer.ObjectID(obj._id);
+						}
 					} else {
-						obj._id = String(obj._id);
+						if (toType !== 'id') {
+							obj._id = String(obj._id);
+						}
 					}
 				}
 			}
