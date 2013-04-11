@@ -562,22 +562,24 @@ var Monge = IgeEventingClass.extend({
 	 * @private
 	 */
 	_convertIds: function (obj, toType) {
-		if (obj) {
-			if (obj instanceof Array) {
-				// Loop the objects in the array recursively
-				for (var i in obj) {
-					this._convertIds(obj[i]);
-				}
-			} else {
-				if (obj._id) {
-					if (typeof(obj._id) === 'string') {
-						if (toType !== 'string') {
-							// Convert to a mongo id
-							obj._id = new this.client.bson_serializer.ObjectID(obj._id);
-						}
-					} else {
-						if (toType !== 'id') {
-							obj._id = String(obj._id);
+		if (this._options.autoConvertIds) {
+			if (obj) {
+				if (obj instanceof Array) {
+					// Loop the objects in the array recursively
+					for (var i in obj) {
+						this._convertIds(obj[i]);
+					}
+				} else {
+					if (obj._id) {
+						if (typeof(obj._id) === 'string') {
+							if (toType !== 'string') {
+								// Convert to a mongo id
+								obj._id = new this.client.bson_serializer.ObjectID(obj._id);
+							}
+						} else {
+							if (toType !== 'id') {
+								obj._id = String(obj._id);
+							}
 						}
 					}
 				}
