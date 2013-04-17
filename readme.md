@@ -121,7 +121,7 @@ monge.connect({
  */
 monge.insert('test', {'test': 0}, null, function (err, id) {
 	if (!err) {
-		// Insert successful, the inserted item ID is in "id" (string)
+		// Insert successful, the inserted item ID is in "id" (Mongo Object ID)
 	}
 });
 ```
