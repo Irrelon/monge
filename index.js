@@ -146,7 +146,7 @@ var Monge = IgeEventingClass.extend({
 
 					// Callback the result
 					if (typeof(cb) === 'function') {
-						docs = docs !== undefined ? String(docs[0]._id) : null;
+						docs = docs !== undefined ? docs[0]._id : null;
 						cb(err, docs);
 					}
 				});
@@ -238,7 +238,7 @@ var Monge = IgeEventingClass.extend({
 	
 						// Callback the result
 						if (typeof(cb) === 'function') {
-							docs !== undefined ? String(docs[0]._id) : null;
+							docs !== undefined ? docs[0]._id : null;
 							cb(err, docs);
 						}
 					});
