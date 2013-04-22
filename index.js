@@ -136,7 +136,7 @@ var Monge = IgeEventingClass.extend({
 		var self = this;
 		
 		if (!obj) { obj = {}; }
-		this._convertIds(obj);
+		this._convertIds(obj, options);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -146,7 +146,7 @@ var Monge = IgeEventingClass.extend({
 
 					// Callback the result
 					if (typeof(cb) === 'function') {
-						docs = docs !== undefined ? docs[0]._id : null;
+						docs = docs !== undefined ? String(docs[0]._id) : null;
 						cb(err, docs);
 					}
 				});
@@ -175,8 +175,8 @@ var Monge = IgeEventingClass.extend({
 		
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
-		this._convertIds(searchObj);
-		this._convertIds(updateObj);
+		this._convertIds(searchObj, options);
+		this._convertIds(updateObj, options);
 
 		// Set some options defaults
 		if (options.safe === undefined) { options.safe = true; }
@@ -238,7 +238,7 @@ var Monge = IgeEventingClass.extend({
 	
 						// Callback the result
 						if (typeof(cb) === 'function') {
-							docs !== undefined ? docs[0]._id : null;
+							docs !== undefined ? String(docs[0]._id) : null;
 							cb(err, docs);
 						}
 					});
@@ -276,7 +276,7 @@ var Monge = IgeEventingClass.extend({
 		}
 		
 		if (!obj) { obj = {}; }
-		this._convertIds(obj);
+		this._convertIds(obj, options);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -365,7 +365,7 @@ var Monge = IgeEventingClass.extend({
 	distinct: function (collection, key, obj, options, cb) {
 		if (!obj) { obj = {}; }
 		if (!options) { options = {}; }
-		this._convertIds(obj);
+		this._convertIds(obj, options);
 		
 		this.client.command({"distinct": collection, "key": key, "query": obj || {}}, options, function (err, dataArr) {
 			var data;
@@ -404,8 +404,8 @@ var Monge = IgeEventingClass.extend({
 		
 		if (!searchObj) { searchObj = {}; }
 		if (!unSetObj) { unSetObj = {}; }
-		this._convertIds(searchObj);
-		this._convertIds(unSetObj);
+		this._convertIds(searchObj, options);
+		this._convertIds(unSetObj, options);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -452,8 +452,8 @@ var Monge = IgeEventingClass.extend({
 		
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
-		this._convertIds(searchObj);
-		this._convertIds(updateObj);
+		this._convertIds(searchObj, options);
+		this._convertIds(updateObj, options);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -500,8 +500,8 @@ var Monge = IgeEventingClass.extend({
 		
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
-		this._convertIds(searchObj);
-		this._convertIds(updateObj);
+		this._convertIds(searchObj, options);
+		this._convertIds(updateObj, options);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -538,7 +538,7 @@ var Monge = IgeEventingClass.extend({
 		if (options.single === undefined) { options.single = false; }
 		
 		if (!obj) { obj = {}; }
-		this._convertIds(obj);
+		this._convertIds(obj, options);
 		
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -552,6 +552,19 @@ var Monge = IgeEventingClass.extend({
 				});
 			} else {
 				// Callback the result array
+				if (typeof(cb) === 'function') {
+					cb(err);
+				}
+			}
+		});
+	},
+	
+	aggregate: function (collection, pipeline, options, cb) {
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				// Got the collection
+				tempCollection.aggregate(pipeline, cb);
+			} else {
 				if (typeof(cb) === 'function') {
 					cb(err);
 				}
@@ -575,26 +588,28 @@ var Monge = IgeEventingClass.extend({
 	/**
 	 * A private method for converting _id key/values to string and mongo ID objects.
 	 * @param obj
-	 * @param {String=} toType Sets the type to convert to, either 'string' or 'id'. 
+	 * @param {Object} options
 	 * @private
 	 */
-	_convertIds: function (obj, toType) {
-		if (this._options.autoConvertIds) {
+	_convertIds: function (obj, options) {
+		options = options || {};
+		
+		if (options.autoConvertIds || this._options.autoConvertIds) {
 			if (obj) {
 				if (obj instanceof Array) {
 					// Loop the objects in the array recursively
 					for (var i in obj) {
-						this._convertIds(obj[i]);
+						this._convertIds(obj[i], options);
 					}
 				} else {
 					if (obj._id) {
 						if (typeof(obj._id) === 'string') {
-							if (toType !== 'string') {
+							if (options.toType !== 'string') {
 								// Convert to a mongo id
 								obj._id = new this.client.bson_serializer.ObjectID(obj._id);
 							}
 						} else {
-							if (toType !== 'id') {
+							if (options.toType !== 'id') {
 								obj._id = String(obj._id);
 							}
 						}
