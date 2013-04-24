@@ -141,7 +141,7 @@ var Monge = IgeEventingClass.extend({
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
 				// Got the collection
-				tempCollection.insert(obj, function (err, docs) {
+				tempCollection.insert(obj, options, function (err, docs) {
 					var i;
 
 					// Callback the result
