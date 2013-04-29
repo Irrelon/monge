@@ -571,6 +571,52 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
+	
+	/**
+	 * Increments the passed field name by 1.
+	 * @param {String} collection The collection to work with.
+	 * @param {Object} searchObj The key/values to search for when finding items to update.
+	 * @param {Object} incrementObj The field to increment and the amount e.g. { field1: 1 }
+	 * @param {Object} options The options to pass to the database method when executing.
+	 * @param {Function} cb The callback method.
+	 */
+	increment: function (collection, searchObj, incrementObj, options, cb) {
+		var self = this;
+		if (!options) { options = {}; }
+		
+		if (!searchObj) { searchObj = {}; }
+		if (!incrementObj) { incrementObj = {}; }
+		this._convertIds(searchObj, options);
+		this._convertIds(incrementObj, options);
+
+		// Set some options defaults
+		if (options.safe === undefined) { options.safe = true; }
+		if (options.multiple === undefined) {
+			options.multi = true;
+		} else {
+			options.multi = options.multiple;
+			delete options.multiple;
+		}
+
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				var finalUpdateJson;
+
+				// Ensure we only update, not overwrite!
+				finalUpdateJson = {
+					'$inc': incrementObj
+				};
+
+				// Got the collection (or err)
+				tempCollection.update(searchObj, finalUpdateJson, options, cb);
+			} else {
+				// Callback the result
+				if (typeof(cb) === 'function') {
+					cb(err, tempCollection);
+				}
+			}
+		});
+	},
 
 	/**
 	 * Converts a string into a new database ObjectID.
