@@ -650,7 +650,8 @@ var Monge = IgeEventingClass.extend({
 					if (!err && items) {
 						var arrCount = items.length,
 							itemIndex,
-							item;
+							item,
+							updateObj;
 						
 						for (itemIndex = 0; itemIndex < arrCount; itemIndex++) {
 							item = items[itemIndex];
