@@ -617,6 +617,47 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
+	
+	setFieldFromSelf: function (collection, searchObj, updateField, fromField, options, cb) {
+		var self = this;
+		if (!options) { options = {}; }
+		
+		if (!searchObj) { searchObj = {}; }
+		this._convertIds(searchObj, options);
+
+		// Set some options defaults
+		if (options.safe === undefined) { options.safe = true; }
+		if (options.multiple === undefined) {
+			options.multi = true;
+		} else {
+			options.multi = options.multiple;
+			delete options.multiple;
+		}
+
+		this.client.collection(collection, function (err, tempCollection) {
+			if (!err) {
+				// Query for items based on searchObj
+				self.query(collection, searchObj, {}, function (err, items) {
+					if (!err && items) {
+						var arrCount = items.length,
+							itemIndex,
+							item;
+						
+						for (itemIndex = 0; itemIndex < arrCount; itemIndex++) {
+							item = items[itemIndex];
+							
+							// Update the item with the new data
+							updateObj = {};
+							updateObj[updateField] = item[fromField];
+							self.update(collection, {_id: item._id}, updateObj, options, function (err) {});
+						}
+					} else {
+						cb(err);
+					}
+				});
+			}
+		});
+	},
 
 	/**
 	 * Converts a string into a new database ObjectID.
