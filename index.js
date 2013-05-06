@@ -618,6 +618,15 @@ var Monge = IgeEventingClass.extend({
 		});
 	},
 	
+	/**
+	 * Increments the passed field name by 1.
+	 * @param {String} collection The collection to work with.
+	 * @param {Object} searchObj The key/values to search for when finding items to update.
+	 * @param {Object} updateField The field to update with data from the fromField.
+	 * @param {Object} fromField The field to read data from to update the updateField with.
+	 * @param {Object} options The options to pass to the database update method when executing.
+	 * @param {Function} cb The callback method.
+	 */
 	setFieldFromSelf: function (collection, searchObj, updateField, fromField, options, cb) {
 		var self = this;
 		if (!options) { options = {}; }
