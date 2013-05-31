@@ -543,11 +543,11 @@ var Monge = IgeEventingClass.extend({
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
 				// Got the collection (or err)
-				tempCollection.remove(obj, options, function (err, tempCollection) {
+				tempCollection.remove(obj, options, function (err, data) {
 					// Got results array (or err)
 					// Callback the result array
 					if (typeof(cb) === 'function') {
-						cb(err);
+						cb(err, data);
 					}
 				});
 			} else {
@@ -648,19 +648,21 @@ var Monge = IgeEventingClass.extend({
 				// Query for items based on searchObj
 				self.query(collection, searchObj, {}, function (err, items) {
 					if (!err && items) {
-						var arrCount = items.length,
+						var arr = items,
+							arrCount = arr.length,
 							itemIndex,
 							item,
 							updateObj;
 						
 						for (itemIndex = 0; itemIndex < arrCount; itemIndex++) {
-							item = items[itemIndex];
+							item = arr[itemIndex];
 							
 							// Update the item with the new data
 							updateObj = {};
 							updateObj[updateField] = item[fromField];
 							self.update(collection, {_id: item._id}, updateObj, options, function (err) {});
 						}
+						cb(err);
 					} else {
 						cb(err);
 					}
@@ -675,8 +677,13 @@ var Monge = IgeEventingClass.extend({
 	 * @returns {Object} The new mongo ObjectID.
 	 */
 	toId: function (id) {
-		if (typeof(id) === 'string') {
-			return new this.client.bson_serializer.ObjectID(id);
+		if (typeof(id) === 'string' && id && (String(id).length === 12 || String(id).length === 24)) {
+			try {
+				return new this.client.bson_serializer.ObjectID(id);
+			} catch (e) {
+				this.log('Monge toId() cannot convert id to object because it is not a valid id: ', 'warning', id);
+				return '';
+			}
 		} else {
 			return id;
 		}
