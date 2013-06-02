@@ -474,6 +474,63 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
+	
+	/**
+	 * Pushes an item to an array field as long as an item with the search
+	 * parameters passed does not already exist. If no search parameters are
+	 * passed the pushed object is searched for.
+	 * @param {String} collection The collection to work with.
+	 * @param {Object} searchObj The key/values to search for when finding items to push into.
+	 * @param {Object} updateObj The key of the array to push into and the values that should
+	 * be pushed into that array.
+	 * @param {Object} uniqueCheck The search object to check for to determine if the item
+	 * should be pushed or not. If this is null, the object to be pushed in "updateObj" parameter
+	 * will be used instead. In most cases it is best to specify this object to avoid ambiguity.
+	 * @param {Object} options The options to pass to the database method when executing.
+	 * @param {Function} cb The callback method.
+	 */
+	pushUnique: function (collection, searchObj, updateObj, uniqueCheck, options, cb) {
+		var self = this;
+		if (!options) { options = {}; }
+
+		// Set some options defaults
+		if (options.safe === undefined) { options.safe = true; }
+		if (options.multiple === undefined) {
+			options.multi = true;
+		} else {
+			options.multi = options.multiple;
+			delete options.multiple;
+		}
+		if (options.upsert === undefined) { options.upsert = false; }
+		
+		if (!searchObj) { searchObj = {}; }
+		if (!updateObj) { updateObj = {}; }
+		this._convertIds(searchObj, options);
+		this._convertIds(updateObj, options);
+		
+		if (!uniqueCheck) { uniqueCheck = updateObj; }
+
+		// First check that an existing item does not exists
+		self.queryOne(collection, uniqueCheck, {}, function (err, data) {
+			if (!err) {
+				if (!data) {
+					// Data does not exist, push it
+					self.push(collection, searchObj, updateObj, options, function (err, data) {
+						if (!err) {
+							cb(false, true); // Return true for pushed
+						} else {
+							cb('Could not push item to unique array: ' + err);
+						}
+					});
+				} else {
+					// Data exists, do not push it
+					cb(false, false); // Return false for not pushed
+				}
+			} else {
+				cb('Could not query database to check for unique entry in pushUnique: ' + err);
+			}
+		});
+	},
 
 	/**
 	 * Pulls an item from an array field.
