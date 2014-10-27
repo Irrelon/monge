@@ -7,17 +7,17 @@ var MongeManager = IgeEventingClass.extend({
 	init: function () {
 		this._connectionCount = 0;
 		this._connectedCount = 0;
-		
+
 		this._dbNames = [];
 	},
-	
+
 	connect: function (connections, callback) {
 		var self = this;
-		
+
 		if (connections instanceof Array) {
 			// Multiple connection objects
 			var i;
-			
+
 			for (i in connections) {
 				if (connections.hasOwnProperty(i)) {
 					// Create new monge instance
@@ -26,14 +26,14 @@ var MongeManager = IgeEventingClass.extend({
 					this._connectionCount++;
 				}
 			}
-			
+
 			for (i in connections) {
 				if (connections.hasOwnProperty(i)) {
 					this[connections[i].name].connect(connections[i], function (err, db) {
 						if (!err) {
 							self._connectedCount++;
 							self.emit('connection', [false, connections[i]]);
-							
+
 							if (self._connectedCount === self._connectionCount) {
 								// All connections established, callback now
 								callback(false);
@@ -54,13 +54,14 @@ var MongeManager = IgeEventingClass.extend({
 var Monge = IgeEventingClass.extend({
 	init: function () {
 		this._mongoNative = require('mongodb');
-		
+
 		this._mongo = {};
 		this._mongo.Db = this._mongoNative.Db;
-		this._mongo.Connection = this._mongoNative.Connection;
-		this._mongo.Server = this._mongoNative.Server;
+		this._mongo.Client = this._mongoNative.MongoClient;
+		//this._mongo.Connection = this._mongoNative.Connection;
+		//this._mongo.Server = this._mongoNative.Server;
 		this._mongo.BSON = this._mongo.Db.bson_serializer;
-		
+
 		this._options = {};
 	},
 
@@ -71,52 +72,58 @@ var Monge = IgeEventingClass.extend({
 	 */
 	connect: function (options, cb) {
 		var self = this;
-		
+
 		this._options = options;
-		
-		if (!this._options.port) {
-			this._options.port = 27017;
-		}
-		
+
 		if (!this._options.nativeParser) {
 			this._options.nativeParser = false;
 		}
-		
+
 		if (!this._options.strict) {
 			this._options.strict = false;
 		}
-		
-		this._mongoServer = new this._mongo.Server(
-			this._options.host,
-			parseInt(this._options.port),
-			{}
-		);
-	
-		this.client = new this._mongo.Db(
-			this._options.db,
-			this._mongoServer,
-			{native_parser: this._options.nativeParser}
-		);
-	
-		this.client.strict = this._options.strict;
-	
-		// Open the database connection
-		this.client.open(function(err, db) {
-			// If we have a username then authenticate!
-			if (self._options.user) {
-				self.client.authenticate(self._options.user, self._options.pass, function () {
-					self.emit('connection', arguments);
-					cb.apply(this, arguments);
-				});
-			} else {
-				if (typeof(cb) === 'function') {
-					self.emit('connection', [err]);
-					cb(err);
-				}
+
+		/*this._mongoServer = new this._mongo.Server(
+		 this._options.host,
+		 parseInt(this._options.port),
+		 {}
+		 );
+
+		 this.client = new this._mongo.Db(
+		 this._options.db,
+		 this._mongoServer,
+		 {native_parser: this._options.nativeParser, safe: false}
+		 );
+
+		 this.client.strict = this._options.strict;
+
+		 // Open the database connection
+		 this.client.open(function(err, db) {
+		 // If we have a username then authenticate!
+		 if (self._options.user) {
+		 self.client.authenticate(self._options.user, self._options.pass, function () {
+		 self.emit('connection', arguments);
+		 cb.apply(this, arguments);
+		 });
+		 } else {
+		 if (typeof(cb) === 'function') {
+		 self.emit('connection', [err]);
+		 cb(err);
+		 }
+		 }
+		 });*/
+
+		this._mongo.Client.connect(this._options.connect, {uri_decode_auth: true}, function(err, db) {
+			if (!err) {
+				self.client = db;
+			}
+			self.emit('connection', arguments);
+			if (typeof(cb) === 'function') {
+				cb.apply(this, arguments);
 			}
 		});
 	},
-	
+
 	/**
 	 * Disconnect from the current mongo connection.
 	 * @param {Function} cb The callback method.
@@ -124,7 +131,7 @@ var Monge = IgeEventingClass.extend({
 	disconnect: function (cb) {
 		this.client.close(cb);
 	},
-	
+
 	/**
 	 * Inserts a new item into the database.
 	 * @param {String} collection The collection to work with.
@@ -134,7 +141,7 @@ var Monge = IgeEventingClass.extend({
 	 */
 	insert: function (collection, obj, options, cb) {
 		var self = this;
-		
+
 		if (!obj) { obj = {}; }
 		this._convertIds(obj, options);
 
@@ -172,7 +179,7 @@ var Monge = IgeEventingClass.extend({
 	update: function (collection, searchObj, updateObj, options, cb) {
 		var self = this;
 		if (!options) { options = {}; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
 		this._convertIds(searchObj, options);
@@ -207,7 +214,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Updates an existing item or if none exists, inserts a new item into the database.
 	 * @param {String} collection The collection to work with.
@@ -216,14 +223,14 @@ var Monge = IgeEventingClass.extend({
 	 */
 	upsert: function (collection, obj, cb) {
 		var self = this;
-		
+
 		if (!obj) { obj = {}; }
 		this._convertIds(obj);
 
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
 				// Got the collection
-				
+
 				if (obj._id) {
 					// Check if an existing record exists
 					this.queryOne(collection, {'_id': obj._id}, {'returnFields': [{'_id': 1}]}, function (err, item) {
@@ -235,7 +242,7 @@ var Monge = IgeEventingClass.extend({
 				} else {
 					this.insert(collection, obj, {}, function (err, docs) {
 						var i;
-	
+
 						// Callback the result
 						if (typeof(cb) === 'function') {
 							docs !== undefined ? String(docs[0]._id) : null;
@@ -251,7 +258,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Returns all records matching the search object and returns them as an array.
 	 * @param {String} collection The collection to work with.
@@ -262,19 +269,19 @@ var Monge = IgeEventingClass.extend({
 	query: function (collection, obj, options, cb) {
 		var self = this,
 			modifierOptions = {};
-		
+
 		if (!options) { options = {}; }
-		
+
 		if (options.returnFields) {
 			options.fields = options.returnFields;
 			delete options.returnFields;
 		}
-		
+
 		if (options.orderBy) {
 			modifierOptions.orderBy = options.orderBy;
 			delete options.orderBy;
 		}
-		
+
 		if (!obj) { obj = {}; }
 		this._convertIds(obj, options);
 
@@ -282,7 +289,7 @@ var Monge = IgeEventingClass.extend({
 			if (!err) {
 				// Got the collection (or err)
 				var tempCursor = tempCollection.find(obj, options);
-				
+
 				if (tempCursor) {
 					// Got the result cursor (or err)
 					if (!modifierOptions.orderBy) {
@@ -310,7 +317,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Returns a single item matching the search object.
 	 * @param {String} collection The collection to work with.
@@ -320,7 +327,7 @@ var Monge = IgeEventingClass.extend({
 	 */
 	queryOne: function (collection, obj, options, cb) {
 		if (!options) { options = {}; }
-		
+
 		// Add a limit to the options
 		options.limit = 1;
 		this.query(collection, obj, options, function (err, item) {
@@ -341,7 +348,7 @@ var Monge = IgeEventingClass.extend({
 	count: function (collection, obj, cb) {
 		if (!obj) { obj = {}; }
 		this._convertIds(obj);
-		
+
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
 				// Got the collection (or err)
@@ -366,22 +373,22 @@ var Monge = IgeEventingClass.extend({
 		if (!obj) { obj = {}; }
 		if (!options) { options = {}; }
 		this._convertIds(obj, options);
-		
+
 		this.client.command({"distinct": collection, "key": key, "query": obj || {}}, options, function (err, dataArr) {
 			var data;
-			
+
 			if (dataArr && dataArr['values']) {
 				data = dataArr['values'];
 			}
-			
+
 			if (typeof(cb) === 'function') {
 				cb(err, data);
 			}
 		});
 	},
-	
+
 	/**
-	 * Removes an item's property / key. 
+	 * Removes an item's property / key.
 	 * @param {String} collection The collection to work with.
 	 * @param {Object} searchObj The key/values to search for when finding items to unset keys in.
 	 * @param {Object} unSetObj The keys to unset with a value of 1. E.g. to unset a key "name" you
@@ -401,7 +408,7 @@ var Monge = IgeEventingClass.extend({
 			delete options.multiple;
 		}
 		if (options.upsert === undefined) { options.upsert = false; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!unSetObj) { unSetObj = {}; }
 		this._convertIds(searchObj, options);
@@ -449,7 +456,7 @@ var Monge = IgeEventingClass.extend({
 			delete options.multiple;
 		}
 		if (options.upsert === undefined) { options.upsert = false; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
 		this._convertIds(searchObj, options);
@@ -474,7 +481,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Pushes an item to an array field as long as an item with the search
 	 * parameters passed does not already exist. If no search parameters are
@@ -502,12 +509,12 @@ var Monge = IgeEventingClass.extend({
 			delete options.multiple;
 		}
 		if (options.upsert === undefined) { options.upsert = false; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
 		this._convertIds(searchObj, options);
 		this._convertIds(updateObj, options);
-		
+
 		if (!uniqueCheck) { uniqueCheck = updateObj; }
 
 		// First check that an existing item does not exists
@@ -554,7 +561,7 @@ var Monge = IgeEventingClass.extend({
 			delete options.multiple;
 		}
 		if (options.upsert === undefined) { options.upsert = false; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!updateObj) { updateObj = {}; }
 		this._convertIds(searchObj, options);
@@ -579,7 +586,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Removes all rows that match the passed criteria.
 	 * @param {String} collection The collection to work with.
@@ -590,13 +597,13 @@ var Monge = IgeEventingClass.extend({
 	remove: function (collection, obj, options, cb) {
 		var self = this;
 		if (!options) { options = {}; }
-		
+
 		if (options.safe === undefined) { options.safe = true; }
 		if (options.single === undefined) { options.single = false; }
-		
+
 		if (!obj) { obj = {}; }
 		this._convertIds(obj, options);
-		
+
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
 				// Got the collection (or err)
@@ -615,7 +622,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	aggregate: function (collection, pipeline, options, cb) {
 		this.client.collection(collection, function (err, tempCollection) {
 			if (!err) {
@@ -628,7 +635,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Increments the passed field name by 1.
 	 * @param {String} collection The collection to work with.
@@ -640,7 +647,7 @@ var Monge = IgeEventingClass.extend({
 	increment: function (collection, searchObj, incrementObj, options, cb) {
 		var self = this;
 		if (!options) { options = {}; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		if (!incrementObj) { incrementObj = {}; }
 		this._convertIds(searchObj, options);
@@ -674,7 +681,7 @@ var Monge = IgeEventingClass.extend({
 			}
 		});
 	},
-	
+
 	/**
 	 * Increments the passed field name by 1.
 	 * @param {String} collection The collection to work with.
@@ -687,7 +694,7 @@ var Monge = IgeEventingClass.extend({
 	setFieldFromSelf: function (collection, searchObj, updateField, fromField, options, cb) {
 		var self = this;
 		if (!options) { options = {}; }
-		
+
 		if (!searchObj) { searchObj = {}; }
 		this._convertIds(searchObj, options);
 
@@ -710,10 +717,10 @@ var Monge = IgeEventingClass.extend({
 							itemIndex,
 							item,
 							updateObj;
-						
+
 						for (itemIndex = 0; itemIndex < arrCount; itemIndex++) {
 							item = arr[itemIndex];
-							
+
 							// Update the item with the new data
 							updateObj = {};
 							updateObj[updateField] = item[fromField];
@@ -754,7 +761,7 @@ var Monge = IgeEventingClass.extend({
 	 */
 	_convertIds: function (obj, options) {
 		options = options || {};
-		
+
 		if (options.autoConvertIds || this._options.autoConvertIds) {
 			if (obj) {
 				if (obj instanceof Array) {
