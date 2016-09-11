@@ -312,7 +312,7 @@ var Monge = IgeEventingClass.extend({
 				}
 			} else {
 				if (typeof(cb) === 'function') {
-					cb(err, results);
+					cb(err);
 				}
 			}
 		});
