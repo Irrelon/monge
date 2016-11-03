@@ -289,26 +289,28 @@ var Monge = IgeEventingClass.extend({
 			if (!err) {
 				// Got the collection (or err)
 				var tempCursor = tempCollection.find(obj, options);
-
+				
 				if (tempCursor) {
-					// Got the result cursor (or err)
-					if (!modifierOptions.orderBy) {
-						tempCursor.toArray(function (err, results) {
-							// Callback the results
-							if (typeof(cb) === 'function') {
-								cb(err, results);
-							}
-						});
-					} else {
-						tempCursor
-							.sort(modifierOptions.orderBy)
-							.toArray(function (err, results) {
+					tempCursor.count(true, function(err, count) {
+						// Got the result cursor (or err)
+						if (!modifierOptions.orderBy) {
+							tempCursor.toArray(function (err, results) {
 								// Callback the results
 								if (typeof(cb) === 'function') {
-									cb(err, results);
+									cb(err, results, count);
 								}
 							});
-					}
+						} else {
+							tempCursor
+								.sort(modifierOptions.orderBy)
+								.toArray(function (err, results) {
+									// Callback the results
+									if (typeof(cb) === 'function') {
+										cb(err, results, count);
+									}
+								});
+						}
+					});
 				}
 			} else {
 				if (typeof(cb) === 'function') {
