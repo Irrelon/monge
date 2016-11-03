@@ -291,7 +291,7 @@ var Monge = IgeEventingClass.extend({
 				var tempCursor = tempCollection.find(obj, options);
 				
 				if (tempCursor) {
-					tempCursor.count(true, function(err, count) {
+					tempCursor.count(false, function(err, count) {
 						// Got the result cursor (or err)
 						if (!modifierOptions.orderBy) {
 							tempCursor.toArray(function (err, results) {
